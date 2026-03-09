@@ -26,6 +26,7 @@ The tool is dependency-light and uses Python's standard library for fetch, XML p
 
 - If you have an activated virtualenv, it installs into that virtualenv.
 - If you do not have a virtualenv active, it installs into the default environment for that `python3`.
+- On Homebrew-managed Python, direct `pip install` may fail with `externally-managed-environment` due to PEP 668.
 - Check the target environment with `which python3` and `python3 -m pip --version`.
 
 Recommended isolated setup:
@@ -35,6 +36,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -U pip
 python3 -m pip install -e .
+```
+
+App-style install with `pipx`:
+
+```bash
+brew install pipx
+pipx install --editable .
+rss-cli -h
 ```
 
 Use without installing into an environment:
@@ -51,7 +60,11 @@ Show built-in help:
 rss-cli -h
 ```
 
-If `rss-cli` is not found, either install it into the current environment with `python3 -m pip install -e .` or run it directly with `PYTHONPATH=src python3 -m rss_cli`.
+If `rss-cli` is not found, either:
+
+- install it into a virtualenv with `python3 -m venv .venv && source .venv/bin/activate && python3 -m pip install -e .`
+- install it as an app with `pipx install --editable .`
+- or run it directly with `PYTHONPATH=src python3 -m rss_cli`
 
 Fetch one feed for the last 24 hours:
 

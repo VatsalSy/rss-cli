@@ -174,6 +174,8 @@ class CliCsvTests(unittest.TestCase):
     self.assertIn("CSV format:", rendered)
     self.assertIn("Install notes:", rendered)
     self.assertIn("Behavior:", rendered)
+    self.assertIn("externally-managed-environment", rendered)
+    self.assertIn("pipx install --editable .", rendered)
     self.assertIn("python3 -m pip install -e .", rendered)
     self.assertIn("rss-cli --csv feeds.csv --pretty", rendered)
 

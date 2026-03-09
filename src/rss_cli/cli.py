@@ -42,6 +42,13 @@ Install notes:
   - python3 -m pip install -e . installs rss-cli into the Python environment
     behind the python3 command you run.
   - If a virtualenv is active, the command is installed into that virtualenv.
+  - On Homebrew-managed Python, pip may reject direct installs with the
+    "externally-managed-environment" error from PEP 668.
+  - In that case, use a virtualenv for this repo or install the app with pipx:
+      python3 -m venv .venv
+      source .venv/bin/activate
+      python3 -m pip install -e .
+      pipx install --editable .
   - Check which environment you are targeting with:
       which python3
       python3 -m pip --version
