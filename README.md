@@ -8,6 +8,8 @@ CLI tool for fetching RSS feeds and scrubbing the latest entries into a clean, m
 
 The tool is dependency-light and uses Python's standard library for fetch, XML parsing, and normalization.
 
+`rss-cli -h` now includes usage examples, CSV schema, and behavior notes, so the CLI can be used directly without opening the source.
+
 ## Features
 
 - Read RSS and Atom feeds from one or more URLs.
@@ -20,6 +22,14 @@ The tool is dependency-light and uses Python's standard library for fetch, XML p
 
 ## Installation
 
+`python3 -m pip install -e .` installs `rss-cli` into the Python environment behind the `python3` command you run.
+
+- If you have an activated virtualenv, it installs into that virtualenv.
+- If you do not have a virtualenv active, it installs into the default environment for that `python3`.
+- Check the target environment with `which python3` and `python3 -m pip --version`.
+
+Recommended isolated setup:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -27,7 +37,41 @@ python3 -m pip install -U pip
 python3 -m pip install -e .
 ```
 
-## Usage
+Use without installing into an environment:
+
+```bash
+PYTHONPATH=src python3 -m rss_cli -h
+```
+
+## Quick Start
+
+Show built-in help:
+
+```bash
+rss-cli -h
+```
+
+If `rss-cli` is not found, either install it into the current environment with `python3 -m pip install -e .` or run it directly with `PYTHONPATH=src python3 -m rss_cli`.
+
+Fetch one feed for the last 24 hours:
+
+```bash
+rss-cli --feed https://rss.arxiv.org/rss/physics.flu-dyn --hours 24 --pretty
+```
+
+Use the repo's curated feed list:
+
+```bash
+rss-cli --csv feeds.csv --pretty
+```
+
+Write JSON to a file:
+
+```bash
+rss-cli --csv feeds.csv --pretty --output latest.json
+```
+
+## Usage Patterns
 
 Single feed:
 
@@ -49,6 +93,15 @@ Last 24 hours only:
 rss-cli --feed https://rss.arxiv.org/rss/physics.flu-dyn --hours 24 --pretty
 ```
 
+Last 24 hours only, capped at 20 entries:
+
+```bash
+rss-cli --feed https://feeds.aps.org/rss/recent/prfluids.xml \
+  --hours 24 \
+  --limit 20 \
+  --pretty
+```
+
 CSV-driven input:
 
 ```bash
@@ -58,10 +111,17 @@ rss-cli --csv feeds.csv --pretty
 Example `feeds.csv`:
 
 ```csv
-feed,limit,hours
-https://rss.arxiv.org/rss/physics.flu-dyn,10,24
-https://feeds.aps.org/rss/recent/prfluids.xml,5,12
+feed,hours,limit
+https://rss.arxiv.org/rss/physics.flu-dyn,24,50
+https://feeds.aps.org/rss/recent/prfluids.xml,12,20
 ```
+
+CSV column rules:
+
+- `feed` is required.
+- `hours` is optional and overrides `--hours` for that row.
+- `limit` is optional and overrides `--limit` for that row.
+- If a row leaves out `hours` or `limit`, the CLI falls back to the global flags.
 
 Positional URLs also work:
 
@@ -77,6 +137,18 @@ rss-cli --feed https://rss.arxiv.org/rss/physics.flu-dyn \
   --pretty \
   --output latest.json
 ```
+
+## How It Decides What To Return
+
+For each feed, the CLI:
+
+1. fetches the feed XML
+2. normalizes RSS/Atom fields into a stable schema
+3. sorts entries by the freshest available timestamp
+4. applies the `hours` window if requested
+5. applies the `limit`
+
+This means `--hours 24 --limit 20` means "keep entries from the last 24 hours, then return at most 20 of them."
 
 ## Output Shape
 

@@ -13,6 +13,47 @@ from typing import Optional
 from .parser import dump_json, fetch_and_parse_feed, parse_entry_datetime, utc_now_iso
 
 
+HELP_EPILOG = """Examples:
+  Fetch one feed and keep entries from the last 24 hours:
+    rss-cli --feed https://rss.arxiv.org/rss/physics.flu-dyn --hours 24 --pretty
+
+  Fetch multiple feeds with one shared window and limit:
+    rss-cli --feed https://rss.arxiv.org/rss/physics.flu-dyn \\
+            --feed https://feeds.aps.org/rss/recent/prfluids.xml \\
+            --hours 24 --limit 50 --pretty
+
+  Read requests from CSV:
+    rss-cli --csv feeds.csv --pretty
+
+CSV format:
+  Required column:
+    feed   RSS or Atom URL
+
+  Optional columns:
+    limit  Maximum entries to keep for that row
+    hours  Keep only entries published or updated within the last X hours
+
+  Example:
+    feed,hours,limit
+    https://rss.arxiv.org/rss/physics.flu-dyn,24,50
+    https://feeds.aps.org/rss/recent/prfluids.xml,24,20
+
+Install notes:
+  - python3 -m pip install -e . installs rss-cli into the Python environment
+    behind the python3 command you run.
+  - If a virtualenv is active, the command is installed into that virtualenv.
+  - Check which environment you are targeting with:
+      which python3
+      python3 -m pip --version
+
+Behavior:
+  - The tool fetches each feed, normalizes entries, sorts by freshest timestamp,
+    applies the hour window if requested, and then applies the entry limit.
+  - If a row omits limit or hours, the CLI falls back to --limit and --hours.
+  - Output is one JSON document with a feeds list and an errors list.
+  - A feed can return fewer items than requested if the publisher exposes fewer."""
+
+
 def parse_row_limit(value: str, default_limit: int, row_number: int) -> int:
   """Parse an optional per-row limit from CSV input."""
   cleaned = value.strip()
@@ -145,7 +186,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
   """Parse CLI arguments."""
   parser = argparse.ArgumentParser(
     prog="rss-cli",
-    description="Fetch RSS or Atom feeds and scrub recent entries into normalized JSON.",
+    description=(
+      "Fetch RSS or Atom feeds, normalize entries into JSON, and optionally filter "
+      "them by recency."
+    ),
+    epilog=HELP_EPILOG,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
   )
   parser.add_argument(
     "feeds",
@@ -162,7 +208,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
   parser.add_argument(
     "--csv",
     type=Path,
-    help="CSV file with a required 'feed' column and optional per-row 'limit' column.",
+    help="CSV file with a required 'feed' column and optional 'limit' and 'hours' columns.",
   )
   parser.add_argument(
     "--limit",

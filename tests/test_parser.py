@@ -1,5 +1,7 @@
 """Tests for feed parsing and scrubbing."""
 
+import contextlib
+import io
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -159,6 +161,22 @@ if __name__ == "__main__":
 
 
 class CliCsvTests(unittest.TestCase):
+  def test_help_includes_csv_and_examples(self) -> None:
+    buffer = io.StringIO()
+
+    with self.assertRaises(SystemExit) as exc:
+      with contextlib.redirect_stdout(buffer):
+        cli.parse_args(["-h"])
+
+    self.assertEqual(exc.exception.code, 0)
+    rendered = buffer.getvalue()
+    self.assertIn("Read requests from CSV", rendered)
+    self.assertIn("CSV format:", rendered)
+    self.assertIn("Install notes:", rendered)
+    self.assertIn("Behavior:", rendered)
+    self.assertIn("python3 -m pip install -e .", rendered)
+    self.assertIn("rss-cli --csv feeds.csv --pretty", rendered)
+
   def test_load_csv_requests_uses_row_limit_or_default(self) -> None:
     with tempfile.TemporaryDirectory() as tmp_dir:
       csv_path = Path(tmp_dir) / "feeds.csv"
