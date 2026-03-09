@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rss-cli"
+version = "0.1.0"
+description = "Read RSS and Atom feeds and scrub recent entries into normalized JSON."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+  {name = "Vatsal"}
+]
+dependencies = []
+
+[project.scripts]
+rss-cli = "rss_cli.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rss_cli"]
+
